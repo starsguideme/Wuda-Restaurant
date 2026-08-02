@@ -1,0 +1,16 @@
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = false
+	logallrefupdates = true
+	symlinks = false
+	ignorecase = true
+[remote "stars"]
+	url = https://gitee.com/starsguide/warehouse.git
+	fetch = +refs/heads/*:refs/remotes/stars/*
+[branch "master"]
+	remote = stars
+	merge = refs/heads/master
+[remote "origin"]
+	url = https://github.com/starsguideme/sky-take-out.git
+	fetch = +refs/heads/*:refs/remotes/origin/*

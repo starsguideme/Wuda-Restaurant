@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sky.mapper.UserMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into user(openid, name, phone, sex, id_number, avatar, create_time)
+        values(#{openid}, #{name}, #{phone}, #{sex}, #{idNumber}, #{avatar}, #{createTime})
+    </insert>
+
+    <select id="getById" resultType="com.sky.entity.User">
+        select * from user where id = #{id}
+    </select>
+
+    <select id="getDailyUserStats" resultType="map">
+        SELECT
+            DATE(create_time) as date,
+            COUNT(*) as new_count
+        FROM user
+        WHERE create_time BETWEEN #{begin} AND #{end}
+        GROUP BY DATE(create_time)
+        ORDER BY date
+    </select>
+    <select id="getDailyNumber" resultType="map">
+        SELECT
+            DATE(create_time) as date,
+            COUNT(*) as new_users,
+            SUM(COUNT(*)) OVER (ORDER BY DATE(create_time)) as total_count
+        FROM user
+        WHERE create_time BETWEEN #{begin} AND #{end}
+        GROUP BY DATE(create_time)
+        ORDER BY date
+    </select>
+    <select id="countByMap" resultType="java.lang.Integer">
+        select count(*) from user
+    </select>
+
+</mapper>

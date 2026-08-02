@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sky.mapper.DishMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+   insert into dish(name, category_id, price, image, description, create_time, update_time, create_user, update_user,status)
+    values(#{name}, #{categoryId}, #{price}, #{image}, #{description}, #{createTime}, #{updateTime}, #{createUser}, #{updateUser},#{status})
+    </insert>
+    <delete id="deleteByIds">
+        delete from dish where id in
+        <foreach item="ids" collection="list" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <select id="pageQuery" resultType="com.sky.vo.DishVO">
+        select d.*,c.name as categoryName from dish d left join category c on d.category_id=c.id
+        <where>
+            <if test="name != null">
+                and d.name like concat('%',#{name},'%')
+            </if>
+            <if test="categoryId != null">
+                and d.category_id=#{categoryId}
+            </if>
+        <if test="status != null">
+            and d.status=#{status}
+        </if>
+        </where>
+        order by d.create_time desc
+    </select>
+    <select id="list" resultType="com.sky.entity.Dish">
+        select * from dish
+        order by create_time desc
+        limit #{pageSize} offset #{offset}
+    </select>
+    <select id="listByConditon" resultType="com.sky.entity.Dish">
+        select * from dish
+        <where>
+            <if test="name != null">
+                and name like concat('%',#{name},'%')
+            </if>
+            <if test="categoryId != null">
+                and category_id= #{categoryId}
+            </if>
+            <if test="status != null">
+                and status= #{status}
+            </if>
+        </where>
+    </select>
+    <select id="getTop10" resultType="com.sky.dto.GoodsSalesDTO">
+        SELECT
+        d.name as name,
+        SUM(od.number) as number
+        FROM order_detail od
+        INNER JOIN orders o ON od.order_id = o.id
+        INNER JOIN dish d ON od.dish_id = d.id  <!-- 关联菜品表获取标准名称 -->
+        WHERE o.status = #{status}
+        AND o.order_time BETWEEN #{begin} AND #{end}
+        AND d.name IS NOT NULL
+        AND d.name != ''
+        GROUP BY d.id, d.name  <!-- 按菜品ID和名称分组 -->
+        ORDER BY number DESC
+        LIMIT 10
+    </select>
+    <select id="countByMap" resultType="java.lang.Integer">
+        select count(id) from dish
+        <where>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="categoryId != null">
+                and category_id = #{categoryId}
+            </if>
+        </where>
+    </select>
+    <update id="update">
+            update dish
+            <set>
+                <if test="name != null">name = #{name},</if>
+                <if test="categoryId != null">category_id = #{categoryId},</if>
+                <if test="price != null">price = #{price},</if>
+                <if test="image != null">image = #{image},</if>
+                <if test="description != null">description = #{description},</if>
+                <if test="status != null">status = #{status},</if>
+                <if test="updateTime != null">update_time = #{updateTime},</if>
+                <if test="updateUser != null">update_user = #{updateUser},</if>
+            </set>
+            where id = #{id}
+    </update>
+
+    <!-- 扣减库存：用于用户下单时（带乐观锁防止超卖） -->
+    <update id="decreaseStock">
+        UPDATE dish
+        SET stock = stock - #{number}
+        WHERE id = #{dishId}
+          AND stock >= #{number}
+    </update>
+
+    <!-- 恢复库存：用于订单取消时（无需乐观锁） -->
+    <update id="recoverStock">
+        UPDATE dish
+        SET stock = stock + #{number}
+        WHERE id = #{dishId}
+    </update>
+</mapper>

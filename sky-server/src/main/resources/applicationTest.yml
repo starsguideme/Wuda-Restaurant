@@ -1,0 +1,21 @@
+# 在本地开发环境中可按需配置：
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    host: 127.0.0.1
+#    port: 3306
+#    database: sky_take_out
+#    username: root
+#    password: ${SKY_DATASOURCE_PASSWORD}
+#  alioss:
+#    endpoint: ${ALIYUN_OSS_ENDPOINT}
+#    bucket-name: ${ALIYUN_OSS_BUCKET_NAME}
+#    access-key-id: ${ALIYUN_ACCESS_KEY_ID}
+#    access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET}
+#  redis:
+#    host: 127.0.0.1
+#    port: 6379
+#    password: ${REDIS_PASSWORD}
+#    database: 0
+#  wechat:
+#    appid: ${WECHAT_APPID}
+#    secret: ${WECHAT_SECRET}

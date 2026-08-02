@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sky.mapper.UserOrderDetailMapper">
+
+    <insert id="insertBatch" parameterType="list">
+        insert into order_detail
+        (name, order_id, dish_id, setmeal_id, dish_flavor, number, amount, image)
+        values
+        <foreach collection="list" item="od" separator=",">
+            (#{od.name},#{od.orderId},#{od.dishId},#{od.setmealId},#{od.dishFlavor},
+            #{od.number},#{od.amount},#{od.image})
+        </foreach>
+    </insert>
+        <!--    查询订单的名字和订单号-->
+    <select id="getByOrderId" resultType="com.sky.entity.OrderDetail">
+         SELECT id,dish_id,order_id,name,number,amount,image,dish_flavor from order_detail where order_id=#{orderId}
+    </select>
+    <!-- OrderDetailMapper.xml -->
+    <select id="getByOrderIds" resultType="com.sky.entity.OrderDetail">
+        SELECT id, name, order_id, dish_id, number, amount
+        FROM order_detail
+        WHERE order_id IN
+        <foreach collection="orderIds" item="orderId" open="(" separator="," close=")">
+            #{orderId}
+        </foreach>
+    </select>
+</mapper>
