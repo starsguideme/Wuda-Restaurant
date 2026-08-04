@@ -1,12 +1,13 @@
 package com.sky.entity;
-import com.baomidou.mybatisplus.annotation.TableName;
+
+import ch.qos.logback.classic.db.names.TableName;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("shopping_cart_item")   // 明确指定表名
+//@TableName("shopping_cart_item")   // 明确指定表名
 public class ShoppingCartItem {
     private Long id;
     private Long userId;
