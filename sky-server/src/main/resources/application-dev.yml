@@ -6,3 +6,9 @@ sky:
     database: sky_take_out
     username: root
     password: ${SKY_DATASOURCE_PASSWORD}
+spring:
+  redis:
+    host: localhost
+    port: 6379
+    password:        # 如果没有密码就留空
+    database: 0

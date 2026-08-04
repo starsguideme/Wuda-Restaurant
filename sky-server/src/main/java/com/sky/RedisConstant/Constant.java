@@ -6,4 +6,5 @@ public class Constant {
     public static final String SHOPPING_CART="shopping_cart:";
     public static final String DISH="dish_";
     public static final String SETMEAL="setmeal_";
+    public static final String DISH_RANK="dish_rank";
 }

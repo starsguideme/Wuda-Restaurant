@@ -225,6 +225,16 @@ public class UserOrderServiceImpl implements UserOrderService {
         map.put("orderId", ordersDB.getId());
         map.put("content","订单号"+outTradeNo);
         String jsonString = JSONObject.toJSONString(map);
+        List<OrderDetail>orderDetailList=userOrderDetailMapper.getByOrderId(ordersDB.getId());
+        for (OrderDetail orderDetail : orderDetailList) {
+            if(orderDetail.getName()!=null&&orderDetail.getNumber()!=null)
+            {
+                redisTemplate.opsForZSet().incrementScore(
+                        Constant.DISH_RANK,
+                        orderDetail.getName(),
+                        orderDetail.getNumber());
+            }
+        }
         webSocketServer.sendToAllClient(jsonString);
     }
 
