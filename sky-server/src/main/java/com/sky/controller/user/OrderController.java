@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @RestController("userOrderController")
@@ -23,7 +24,11 @@ import java.util.concurrent.TimeUnit;
 public class OrderController {
     @Autowired
     private UserOrderService userOrderService;
-    
+    /**
+     * 检查并记录提交
+     * @param ordersSubmitDTO 用户ID
+     * @return true = 允许提交，false = 重复提交被拒绝
+     */
     @PostMapping("/submit")
     @ApiOperation("用户下单")
     public Result<OrderSubmitVO> submit(@RequestBody OrdersSubmitDTO ordersSubmitDTO)

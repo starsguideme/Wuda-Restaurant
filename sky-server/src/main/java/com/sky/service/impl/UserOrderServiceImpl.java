@@ -24,16 +24,23 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import com.github.pagehelper.Page;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,8 +62,17 @@ public class UserOrderServiceImpl implements UserOrderService {
     @Autowired
     private WebSocketServer webSocketServer;
     @Autowired
+    private static final ConcurrentHashMap<Long,Long> submitCache = new ConcurrentHashMap<>();
+    @Autowired
+    private static final long TimeOut=5000L;
+    @Resource
+    private ScheduledExecutorService scheduledExecutorService=
+            Executors.newSingleThreadScheduledExecutor();
+    private final AtomicLong orderSeq=new AtomicLong(0);
+    @Autowired
     @Qualifier("redisTemplate")
     private RedisTemplate redisTemplate;
+
 
     @Override
     @Transactional  // 添加事务注解
@@ -71,14 +87,22 @@ public class UserOrderServiceImpl implements UserOrderService {
 
         // 2. 获取当前用户ID
         Long userId = BaseContext.getCurrentId();
-
         // 3. 从Redis获取购物车数据
         String key = Constant.SHOPPING_CART + userId;
         List<Object> objectList = redisTemplate.opsForHash().values(key);
         if (objectList == null || objectList.isEmpty()) {
             throw new ShoppingCartBusinessException(MessageConstant.SHOPPING_CART_IS_NULL);
         }
-
+        long now = System.currentTimeMillis();
+        Long lastTime=submitCache.putIfAbsent(userId,now);
+        if(lastTime!=null)
+         if(now-lastTime<TimeOut)
+            throw new OrderBusinessException("请勿重复下单");
+        submitCache.put(userId,now);
+        // 5秒后清除缓存，允许用户再次下单
+        scheduledExecutorService.schedule(()->{
+            submitCache.remove(userId);
+        },TimeOut, TimeUnit.MILLISECONDS);
         // 4. 将LinkedHashMap转换为ShoppingCart对象
         List<ShoppingCart> cartList = objectList.stream()
                 .map(obj -> {
@@ -129,7 +153,9 @@ public class UserOrderServiceImpl implements UserOrderService {
         orders.setOrderTime(LocalDateTime.now());
         orders.setPayStatus(Orders.UN_PAID);
         orders.setStatus(Orders.PENDING_PAYMENT);
-        orders.setNumber(String.valueOf(System.currentTimeMillis()));
+
+        orders.setNumber(generateOrderNumber());
+
         orders.setPhone(addressBook.getPhone());
         orders.setConsignee(addressBook.getConsignee());  // 设置收货人
         orders.setAddress(addressBook.getDetail());       // 设置收货地址
@@ -160,7 +186,10 @@ public class UserOrderServiceImpl implements UserOrderService {
                 .orderTime(orders.getOrderTime())
                 .build();
     }
-
+    private String generateOrderNumber() {
+        long seq=orderSeq.incrementAndGet()%1000;
+        return System.currentTimeMillis()+String.format("%03d",seq);
+    }
     /**
      * 订单支付
      *
