@@ -12,3 +12,8 @@ spring:
     port: 6379
     password:        # 如果没有密码就留空
     database: 0
+    # 配置线程池参数
+  task:
+    scheduling:
+      pool:
+        size: 10
